@@ -1,0 +1,41 @@
+// Fictional postings: statuses are illustrative keyword labels, not legal advice.
+const jobs = [
+{title:'Barista',company:'Laneway Coffee',pay:'$30–$35 / hour',suburb:'Carlton',category:'Hospitality',visaStatus:'friendly',icon:'☕',description:'Pour great coffee in a friendly neighbourhood café.',posting:'Join our morning team preparing espresso, serving customers and keeping the café welcoming. Casual shifts, 15–20 hours per week, with weekend availability preferred. One year of coffee experience is ideal. International students welcome; rosters can accommodate visa work limits.',trigger:'International students welcome'},
+{title:'Retail Assistant',company:'Southside Goods',pay:'$29–$33 / hour',suburb:'Richmond',category:'Retail',visaStatus:'friendly',icon:'♧',description:'Help customers discover thoughtful everyday essentials.',posting:'Support customers, replenish stock and process sales in our independent shop. Casual shifts across weekdays and weekends, around 16 hours per week. Customer service experience is helpful, but training is provided. Working holiday visa holders welcome.',trigger:'Working holiday visa holders welcome'},
+{title:'Waitstaff',company:'Bay Table',pay:'$30–$36 / hour',suburb:'St Kilda',category:'Hospitality',visaStatus:'friendly',icon:'♧',description:'Bring warm service to a busy bayside dining room.',posting:'Take orders, deliver meals and work with the kitchen to create a great guest experience. Evening and weekend casual shifts, 12–20 hours per week. Victorian RSA required for alcohol service. Applicants with valid temporary work rights welcome.',trigger:'valid temporary work rights welcome'},
+{title:'Warehouse Picker',company:'Westlink Supply',pay:'$32–$37 / hour',suburb:'Footscray',category:'Warehousing',visaStatus:'friendly',icon:'▣',description:'Pick, pack and dispatch orders with a supportive crew.',posting:'Pick online orders, scan stock and prepare parcels safely. Casual weekday shifts, 16–24 hours per week by agreement. Manual handling training is provided. Temporary visa holders considered; all applicants must hold appropriate work rights.',trigger:'Temporary visa holders considered'},
+{title:'Junior Frontend Developer',company:'Yarra Digital',pay:'$75,000–$90,000 / year',suburb:'CBD',category:'Tech',visaStatus:'sponsor',icon:'⌘',description:'Build accessible web experiences with a small product team.',posting:'Work with designers and developers on responsive JavaScript interfaces. Full-time, 38 hours per week, with two office days. Familiarity with HTML, CSS, JavaScript and Git is expected. Sponsorship may be considered for a suitable candidate, subject to eligibility and business requirements.',trigger:'Sponsorship may be considered'},
+{title:'Office Administrator',company:'Northside Services',pay:'$34–$38 / hour',suburb:'Brunswick',category:'Admin',visaStatus:'pr_required',icon:'▤',description:'Keep a community-focused office organised and running smoothly.',posting:'Coordinate calendars, maintain records and support reception. Permanent full-time position, 38 hours per week. Strong spreadsheet and communication skills required. Australian permanent residency required for this sample role.',trigger:'Australian permanent residency required'},
+{title:'IT Support Analyst',company:'Parkville Systems',pay:'$80,000–$95,000 / year',suburb:'Parkville',category:'Tech',visaStatus:'sponsor',icon:'⌘',description:'Solve everyday technical problems for a growing team.',posting:'Resolve helpdesk tickets, configure devices and maintain support documentation. Full-time, 38 hours per week, on site. Two years of support experience preferred. Employer sponsorship possible for eligible experienced candidates; not guaranteed.',trigger:'Employer sponsorship possible'},
+{title:'Dispatch Coordinator',company:'Eastgate Logistics',pay:'$35–$40 / hour',suburb:'Dandenong',category:'Warehousing',visaStatus:'pr_required',icon:'▣',description:'Coordinate daily dispatch and keep deliveries on track.',posting:'Prepare delivery schedules, liaise with drivers and check inventory records. Permanent full-time role, 38 hours per week. Logistics experience and confident communication required. Permanent residents only for this sample vacancy.',trigger:'Permanent residents only'},
+{title:'Reception Assistant',company:'Carlton Studio',pay:'$29–$34 / hour',suburb:'Carlton',category:'Admin',visaStatus:'friendly',icon:'▤',description:'Welcome visitors and support a creative studio.',posting:'Manage bookings, greet guests and assist with simple administrative tasks. Casual position, 12–18 hours per week. Friendly communication and attention to detail essential. Student visa applicants welcome; hours can be arranged around applicable work conditions.',trigger:'Student visa applicants welcome'}
+];
+const $ = selector => document.querySelector(selector);
+const labels = {friendly:'visa friendly',sponsor:'sponsor possible',pr_required:'PR required'};
+let international = false;
+const dialog = $('#detail');
+// Create DOM nodes from known sample data; no user-entered HTML is inserted.
+function card(job) {
+ const button=document.createElement('button'); button.className='job';
+ button.innerHTML='<span class="icon" aria-hidden="true">'+job.icon+'</span><h3>'+job.title+'</h3><div class="pay">'+job.pay+'</div><div class="location">⌖ '+job.suburb+', Melbourne · '+job.company+'</div><p class="desc">'+job.description+'</p><span class="badge '+job.visaStatus+'">'+labels[job.visaStatus]+'</span>';
+ button.addEventListener('click',()=>{ $('#detail-body').innerHTML='<p>'+job.category+' · Sample posting</p><h2 id="detail-title">'+job.title+'</h2><p>'+job.company+' · '+job.suburb+', Melbourne<br>'+job.pay+'</p><span class="badge '+job.visaStatus+'">'+labels[job.visaStatus]+'</span><p>'+job.posting+'</p><div class="why"><strong>Why this badge?</strong><p>Listing mentions “'+job.trigger+'”. This illustrative keyword match does not confirm visa eligibility or guarantee sponsorship.</p></div>'; dialog.showModal(); });
+ return button;
+}
+function render(){
+ const keyword=$('#keyword').value.trim().toLowerCase(), suburb=$('#suburb').value.trim().toLowerCase();
+ const matches=jobs.filter(j=>[j.title,j.company,j.category,j.description,j.posting].join(' ').toLowerCase().includes(keyword)&&j.suburb.toLowerCase().includes(suburb));
+ const visible=matches.filter(j=>!international||j.visaStatus!=='pr_required');
+ const hidden=matches.filter(j=>international&&j.visaStatus==='pr_required');
+ $('#results').replaceChildren(...visible.map(card)); $('#hidden-results').replaceChildren(...hidden.map(card));
+ $('#hidden-section').hidden=!hidden.length; $('#empty').hidden=!!matches.length;
+ $('#count').textContent=visible.length+' jobs'+(international?' · '+hidden.length+' hidden':'');
+}
+function setMode(value){international=value;$('#local').setAttribute('aria-pressed',!value);$('#international').setAttribute('aria-pressed',value);$('#visa').hidden=!value;render();}
+$('#local').addEventListener('click',()=>setMode(false)); $('#international').addEventListener('click',()=>setMode(true));
+['#keyword','#suburb'].forEach(s=>$(s).addEventListener('input',render));
+const notes={'Student visa':'Student visa selected · 48-hour fortnight cap noted where applicable. Check your own visa conditions.','Working holiday':'Working holiday selected · Check employer-duration limits and your individual visa conditions.','Post-study 485':'Post-study 485 selected · Check visa validity and your individual work conditions.','Other':'Other visa selected · Confirm work rights and conditions before applying.'};
+function selectVisa(button){document.querySelectorAll('.chips button').forEach(b=>b.setAttribute('aria-pressed',b===button));$('#visa-note').textContent=notes[button.textContent]+' Chips explain conditions only; sample job ordering is unchanged.';}
+document.querySelectorAll('.chips button').forEach(b=>b.addEventListener('click',()=>selectVisa(b)));
+$('.close').addEventListener('click',()=>dialog.close());
+dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});
+selectVisa($('.chips button'));render();
