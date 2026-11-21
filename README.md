@@ -1,19 +1,16 @@
 # MelbJobs
 
-A static job discovery prototype for Melbourne, Australia. A Local/International toggle lets international users explore listings by illustrative visa eligibility, with single-select visa chips and a transparent “Hidden for your visa” section.
+[Open MelbJobs](https://Kangaroodestroyer12.github.io/melbourne-jobs/)
 
-## Features
-- Nine fictional jobs spanning hospitality, retail, warehousing, admin and tech
-- Live keyword and suburb search in both modes
-- Keyword-based visa badge explanations and accessible job detail dialogs
-- Responsive layout inspired by the supplied mockup
+Melbourne job discovery with Local/International modes, visa chips, keyword/suburb filters, transparent hidden listings and mobile-friendly details.
 
-## Run
-Open index.html directly in a modern browser, or serve this directory with any static server. No dependencies, backend or build step. GitHub Pages: deploy main, / (root).
+## Data
+Listings are sourced via [Adzuna](https://www.adzuna.com/) using the [Adzuna API](https://developer.adzuna.com/). GitHub Actions fetches up to 60 Melbourne listings across hospitality, retail, warehouse, admin, office and IT every 3 hours (UTC cron `0 */3 * * *`), or on manual dispatch. Schedules may be delayed by GitHub.
 
-## Files
-- index.html — semantic page layout
-- styles.css — responsive styling
-- app.js — sample postings and client-side interactions
+Visa badges are keyword-based estimates, not legal advice. A friendly default means only that no visa-related requirements were mentioned, not confirmed eligibility. Check the badge reason and original listing. Listings belong to their original posters; cards and details link back to the original source.
 
-All listings and pay figures are illustrative, not real vacancies. Visa badges and explanatory notes are not legal advice; verify work rights, current conditions and employer requirements independently. No data is sent or stored.
+## Setup
+Add Actions repository secrets `ADZUNA_APP_ID` and `ADZUNA_APP_KEY`, then run Fetch Melbourne jobs. Never commit credentials. Node 22 runs `node scripts/fetch-jobs.js`; failure preserves existing jobs.json. Changed data is committed to main. The workflow explicitly deploys Pages because built-in token commits do not automatically trigger another Pages build.
+
+## Site
+Serve index.html with any static server or GitHub Pages. app.js fetches jobs.json and retains nine fictional fallback samples if the file is missing, empty, invalid or unavailable. Company and source links appear for live listings. No build dependencies.
