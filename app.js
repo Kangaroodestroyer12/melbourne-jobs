@@ -1,5 +1,5 @@
 // Fictional postings: statuses are illustrative keyword labels, not legal advice.
-const jobs = [
+const sampleJobs = [
 {title:'Barista',company:'Laneway Coffee',pay:'$30–$35 / hour',suburb:'Carlton',category:'Hospitality',visaStatus:'friendly',icon:'☕',description:'Pour great coffee in a friendly neighbourhood café.',posting:'Join our morning team preparing espresso, serving customers and keeping the café welcoming. Casual shifts, 15–20 hours per week, with weekend availability preferred. One year of coffee experience is ideal. International students welcome; rosters can accommodate visa work limits.',trigger:'International students welcome'},
 {title:'Retail Assistant',company:'Southside Goods',pay:'$29–$33 / hour',suburb:'Richmond',category:'Retail',visaStatus:'friendly',icon:'♧',description:'Help customers discover thoughtful everyday essentials.',posting:'Support customers, replenish stock and process sales in our independent shop. Casual shifts across weekdays and weekends, around 16 hours per week. Customer service experience is helpful, but training is provided. Working holiday visa holders welcome.',trigger:'Working holiday visa holders welcome'},
 {title:'Waitstaff',company:'Bay Table',pay:'$30–$36 / hour',suburb:'St Kilda',category:'Hospitality',visaStatus:'friendly',icon:'♧',description:'Bring warm service to a busy bayside dining room.',posting:'Take orders, deliver meals and work with the kitchen to create a great guest experience. Evening and weekend casual shifts, 12–20 hours per week. Victorian RSA required for alcohol service. Applicants with valid temporary work rights welcome.',trigger:'valid temporary work rights welcome'},
@@ -14,13 +14,12 @@ const $ = selector => document.querySelector(selector);
 const labels = {friendly:'visa friendly',sponsor:'sponsor possible',pr_required:'PR required'};
 let international = false;
 const dialog = $('#detail');
-// Create DOM nodes from known sample data; no user-entered HTML is inserted.
-function card(job) {
- const button=document.createElement('button'); button.className='job';
- button.innerHTML='<span class="icon" aria-hidden="true">'+job.icon+'</span><h3>'+job.title+'</h3><div class="pay">'+job.pay+'</div><div class="location">⌖ '+job.suburb+', Melbourne · '+job.company+'</div><p class="desc">'+job.description+'</p><span class="badge '+job.visaStatus+'">'+labels[job.visaStatus]+'</span>';
- button.addEventListener('click',()=>{ $('#detail-body').innerHTML='<p>'+job.category+' · Sample posting</p><h2 id="detail-title">'+job.title+'</h2><p>'+job.company+' · '+job.suburb+', Melbourne<br>'+job.pay+'</p><span class="badge '+job.visaStatus+'">'+labels[job.visaStatus]+'</span><p>'+job.posting+'</p><div class="why"><strong>Why this badge?</strong><p>Listing mentions “'+job.trigger+'”. This illustrative keyword match does not confirm visa eligibility or guarantee sponsorship.</p></div>'; dialog.showModal(); });
- return button;
-}
+let jobs=sampleJobs;
+function node(tag,text,cls){const el=document.createElement(tag);el.textContent=text||'';if(cls)el.className=cls;return el;}
+function source(job){try{const u=new URL(job.url);if(!['https:','http:'].includes(u.protocol))return null;const a=node('a','View original listing');a.href=u.href;a.target='_blank';a.rel='noopener noreferrer';return a;}catch{return null;}}
+function details(job){const body=$('#detail-body');body.replaceChildren(node('p',(job.category||'Job')+' · '+(job.url?'Adzuna listing':'Sample posting')),node('h2',job.title),node('p',job.company+' · '+job.suburb+' · '+job.pay),node('span',labels[job.visaStatus],'badge '+job.visaStatus),node('p',job.posting||job.description));body.querySelector('h2').id='detail-title';const why=node('div','','why');why.append(node('strong','Why this badge?'),node('p',job.badgeReason||('Listing mentions “'+job.trigger+'”.')),node('p','Keyword-based estimate, not legal advice or a guarantee of eligibility or sponsorship.'));body.append(why);const link=source(job);if(link)body.append(link);dialog.showModal();}
+function card(job){const box=node('div','','job');const button=node('button');button.type='button';button.style.cssText='background:transparent;border:0;text-align:left;color:inherit;font:inherit;width:100%;cursor:pointer';button.append(node('span',job.icon||'▤','icon'),node('h3',job.title),node('div',job.pay,'pay'),node('div',job.suburb+' · '+job.company,'location'),node('p',job.description,'desc'),node('span',labels[job.visaStatus],'badge '+job.visaStatus));button.addEventListener('click',()=>details(job));box.append(button);const link=source(job);if(link)box.append(link);return box;}
+async function loadJobs(){try{const response=await fetch('./jobs.json',{cache:'no-cache'});if(!response.ok)throw new Error('Job data unavailable');const data=await response.json();if(!Array.isArray(data)||!data.length||!data.every(j=>j&&typeof j.title==='string'&&typeof j.suburb==='string'&&typeof j.description==='string'&&typeof j.pay==='string'&&Object.hasOwn(labels,j.visaStatus)))throw new Error('Invalid job data');jobs=data;document.body.dataset.jobSource='adzuna';}catch{jobs=sampleJobs;document.body.dataset.jobSource='samples';}render();}
 function render(){
  const keyword=$('#keyword').value.trim().toLowerCase(), suburb=$('#suburb').value.trim().toLowerCase();
  const matches=jobs.filter(j=>[j.title,j.company,j.category,j.description,j.posting].join(' ').toLowerCase().includes(keyword)&&j.suburb.toLowerCase().includes(suburb));
@@ -34,8 +33,10 @@ function setMode(value){international=value;$('#local').setAttribute('aria-press
 $('#local').addEventListener('click',()=>setMode(false)); $('#international').addEventListener('click',()=>setMode(true));
 ['#keyword','#suburb'].forEach(s=>$(s).addEventListener('input',render));
 const notes={'Student visa':'Student visa selected · 48-hour fortnight cap noted where applicable. Check your own visa conditions.','Working holiday':'Working holiday selected · Check employer-duration limits and your individual visa conditions.','Post-study 485':'Post-study 485 selected · Check visa validity and your individual work conditions.','Other':'Other visa selected · Confirm work rights and conditions before applying.'};
-function selectVisa(button){document.querySelectorAll('.chips button').forEach(b=>b.setAttribute('aria-pressed',b===button));$('#visa-note').textContent=notes[button.textContent]+' Chips explain conditions only; sample job ordering is unchanged.';}
+function selectVisa(button){document.querySelectorAll('.chips button').forEach(b=>b.setAttribute('aria-pressed',b===button));$('#visa-note').textContent=notes[button.textContent]+' Chips explain conditions only; job ordering is unchanged.';}
 document.querySelectorAll('.chips button').forEach(b=>b.addEventListener('click',()=>selectVisa(b)));
 $('.close').addEventListener('click',()=>dialog.close());
 dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});
 selectVisa($('.chips button'));render();
+
+loadJobs();
